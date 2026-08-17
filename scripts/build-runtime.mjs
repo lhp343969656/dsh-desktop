@@ -60,12 +60,15 @@ mkdirSync(outputRoot, { recursive: true })
 
 // 1) dsh CLI 来源：npm 包（推荐，CI 用）或本地工作区
 if (npmPackage) {
-  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
-  console.log(`installing ${npmPackage} into staging...`)
-  execFileSync(npmCmd, ['install', '--prefix', stagingRoot, npmPackage, '--omit=dev', '--no-audit', '--no-fund', '--loglevel=error'], {
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  })
+  const npmArgs = ['install', '--prefix', stagingRoot, npmPackage, '--omit=dev', '--no-audit', '--no-fund', '--loglevel=error']
+  // 优先直接调 npm-cli.js（避免 Windows 上经 cmd 转义 / shell 安全警告）
+  const npmCli = process.env.npm_execpath
+  if (npmCli && existsSync(npmCli)) {
+    execFileSync(process.execPath, [npmCli, ...npmArgs], { stdio: 'inherit' })
+  } else {
+    const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+    execFileSync(npmCmd, npmArgs, { stdio: 'inherit', shell: process.platform === 'win32' })
+  }
   const spec = npmPackage.split('@').filter(Boolean)
   const packageName = npmPackage.startsWith('@') ? `@${spec[0]}` : spec[0]
   cliSourceRoot = join(stagingRoot, 'node_modules', ...packageName.split('/'))
@@ -86,6 +89,12 @@ if (npmPackage) {
 
 // 2) 清理其他平台的二进制文件
 pruneUnsupportedPlatformFiles(stagingRoot)
+
+// 2.5) 清理 node_modules/.bin 与悬空符号链接
+//      macOS 上 npm 的 bin shim 是符号链接，打包后目标可能失效，tauri-build
+//      校验资源路径时会报 "doesn't exist"；运行时用 `node lib/bin.js` 直接
+//      执行入口，不需要 bin shim。
+removeBinSymlinks(stagingRoot)
 
 // 3) 校验原生模块白名单
 verifyNativeModules(stagingRoot)
@@ -260,6 +269,27 @@ function pruneUnsupportedPlatformFiles(directory) {
       continue
     }
     if (entry.isDirectory()) pruneUnsupportedPlatformFiles(path)
+  }
+}
+
+// 删除 node_modules/.bin 目录与悬空符号链接：macOS 上 npm 的 bin shim 是软链接，
+// 打包后目标可能失效，tauri-build 校验资源路径时会报 "doesn't exist"。
+function removeBinSymlinks(directory) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name)
+    if (entry.isSymbolicLink()) {
+      try {
+        statSync(path)
+      } catch {
+        rmSync(path, { force: true })
+      }
+    } else if (entry.isDirectory()) {
+      if (entry.name === '.bin' && path.split(sep).includes('node_modules')) {
+        rmSync(path, { recursive: true, force: true })
+        continue
+      }
+      removeBinSymlinks(path)
+    }
   }
 }
 
