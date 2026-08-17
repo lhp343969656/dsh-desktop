@@ -37,6 +37,8 @@ jobs:
 
   macos-x64:
     runs-on: macos-13
+    # Intel 运行器排队严重，公开发布不依赖它；能出就出
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -84,7 +86,7 @@ jobs:
           path: src-tauri/target/release/bundle/dmg/*.dmg
 
   release:
-    needs: [windows, macos-x64, macos-arm64]
+    needs: [windows, macos-arm64]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
