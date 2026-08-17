@@ -40,7 +40,9 @@ npm run dev
 ## 构建
 
 ```powershell
-# 1. 打包内置 Runtime（需要 dsh 工作区，见 scripts/build-runtime.mjs 环境变量）
+# 1. 打包内置 Runtime
+#    默认从本地工作区（D:/deepseek-harness）打包；推荐用 npm 发布的 dsh 包：
+$env:DSH_NPM_PACKAGE = '@deepseek-ai/dsh@0.1.0-rc.6'
 npm run runtime:build
 
 # 2. 冒烟测试 Runtime（可选）
@@ -51,6 +53,19 @@ npm run build
 ```
 
 产物在 `src-tauri/target/release/bundle/`。
+
+## CI 自动构建（.github/workflows/release.yml）
+
+推送 `v*` tag 或手动触发 `workflow_dispatch` 后，GitHub Actions 自动构建并发布：
+
+| Job | 运行器 | 产物 |
+|---|---|---|
+| windows | windows-latest | NSIS `.exe`（x64） |
+| macos-x64 | macos-13 | DMG（x64） |
+| macos-arm64 | macos-14 | DMG（Apple Silicon） |
+| release | ubuntu（打 tag 时） | 汇总到 GitHub Release |
+
+CI 从 npm 安装 `@deepseek-ai/dsh`（`release.yml` 顶部的 `DSH_NPM_PACKAGE` 变量），不依赖本地工作区。
 
 ## 启动流程（壳）
 
