@@ -1,0 +1,20 @@
+{
+  "name": "dsh-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "DeepSeek Harness desktop client (Tauri shell + bundled Node runtime)",
+  "scripts": {
+    "tauri": "tauri",
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "runtime:build": "node scripts/build-runtime.mjs",
+    "runtime:smoke": "node scripts/smoke-runtime.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "@tauri-apps/cli-win32-x64-msvc": "^2.11.4"
+  }
+}

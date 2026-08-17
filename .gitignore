@@ -1,0 +1,24 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+node_modules
+dist
+src-tauri/target
+
+# Runtime 构建产物（由 scripts/build-runtime.mjs 生成）
+resources/bundled-runtime/
+resources/bundled-runtime-npm-test/
+resources/.runtime-staging/
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

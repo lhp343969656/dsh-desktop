@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>dsh</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0; height: 100vh; box-sizing: border-box;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+      background: #0d1117; color: #e6edf3;
+      font-family: system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+    .spinner {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 4px solid #21262d; border-top-color: #4c8dff;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .msg { font-size: 15px; color: #8b949e; }
+    #error { font-size: 14px; color: #ff7b72; max-width: 560px; text-align: center; white-space: pre-wrap; word-break: break-all; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="msg">正在启动 dsh…</div>
+  </div>
+  <div id="error" class="hidden"></div>
+  <script>
+    // 壳启动失败时以 #error=<encoded> fragment 跳转回本页
+    const params = new URLSearchParams(location.hash.slice(1));
+    const msg = params.get('error');
+    if (msg) {
+      document.getElementById('loading').classList.add('hidden');
+      const el = document.getElementById('error');
+      el.classList.remove('hidden');
+      el.textContent = '启动失败：' + msg;
+    }
+  </script>
+</body>
+</html>
